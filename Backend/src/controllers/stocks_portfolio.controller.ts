@@ -1,10 +1,13 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import { AuthRequest } from "../types/auth.types";
-import StockPortfolio, {
-  StockPortfolioI,
-} from "../models/stockPortfolio.model";
+import StockPortfolio from "../models/stockPortfolio.model";
 import { recordTransiction } from "../utils/userFuncs";
-import { getErrorMessage, getErrorName } from "../utils/ErrorsFunctions";
+import { getErrorData } from "../utils/ErrorsFunctions";
+import { getStockData } from "../utils/stocksFuncs";
+import {
+  NewStockTransictionI,
+  StockPortfolioI,
+} from "../types/stock_portfolios.types";
 
 export async function createPortfolio(req: AuthRequest, res: Response) {
   const { userId } = req;
@@ -18,6 +21,8 @@ export async function createPortfolio(req: AuthRequest, res: Response) {
 
     return res.status(201).json(portfolio);
   } catch (error) {
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("createPortfolio error:", errorName, errorMessage);
     res.status(500).json("Internal Server Error");
   }
 }
@@ -30,6 +35,8 @@ export async function getUserPortfolios(req: AuthRequest, res: Response) {
     const portfolios = await StockPortfolio.find({ userId: userId });
     res.status(200).json(portfolios);
   } catch (error) {
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("getUserPortfolio error:", errorName, errorMessage);
     res.status(500).json("Internal Server Error");
   }
 }
@@ -51,15 +58,21 @@ export async function getCurrentPortfolioValue(
     if (portfolio.userId.toString() !== userId)
       return res.status(403).json({ message: "Forbidden" });
 
-    res.status(200).json(portfolio);
+    const stockDataPromises = portfolio.stocks.map(async (stock) => {
+      const stockData = await getStockData(stock.symbol);
+      return {
+        symbol: stock.symbol,
+        totalValue: Number(stockData.regularMarketPrice) * stock.quantity,
+      };
+    });
+    const stocksData = await Promise.all(stockDataPromises);
+
+    res.status(200).json(stocksData);
   } catch (error) {
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("getCurrentPortfolioValue error:", errorName, errorMessage);
     res.status(500).json("Internal Server Error");
   }
-}
-
-interface NewStockTransictionI {
-  symbol: string;
-  quantity: number;
 }
 
 export async function addStockToPortfolio(req: AuthRequest, res: Response) {
@@ -92,8 +105,7 @@ export async function addStockToPortfolio(req: AuthRequest, res: Response) {
     await portfolio.save();
     res.status(200).json(portfolio);
   } catch (error) {
-    const errorName = getErrorName(error);
-    const errorMessage = getErrorMessage(error);
+    const { errorMessage, errorName } = getErrorData(error);
     console.log("AddStockToPortfolio error:", errorName, errorMessage);
     if (errorName === "ValidationError") {
       return res.status(400).json({ message: errorMessage });
@@ -111,10 +123,9 @@ export async function removeStockFromPortfolio( // document in the history
   const { stockTransiction } = req.body as {
     stockTransiction: NewStockTransictionI;
   };
-  if (!stockTransiction)
-    return res.status(400).json({ message: "Invalid stock data" });
 
   if (
+    !stockTransiction ||
     !stockTransiction.symbol ||
     typeof stockTransiction.quantity !== "number"
   ) {
@@ -134,6 +145,7 @@ export async function removeStockFromPortfolio( // document in the history
     const stockIndex = portfolio.stocks.findIndex(
       (stock) => stock.symbol === stockTransiction.symbol
     );
+
     if (stockIndex === -1)
       return res.status(404).json({ message: "Stock not exist" });
 
@@ -142,31 +154,31 @@ export async function removeStockFromPortfolio( // document in the history
     if (currentStocksAmount < stockTransiction.quantity)
       return res.status(400).json({ message: "Not enough stock" });
 
-    let updatedPortfolio;
+    // let updatedPortfolio;
     if (currentStocksAmount - stockTransiction.quantity === 0) {
       // remove
-      updatedPortfolio = await StockPortfolio.findOneAndUpdate(
-        {
-          _id: portfolioId,
-          "stocks.symbol": stockTransiction.symbol,
-        },
-        { $pull: { stocks: { symbol: stockTransiction.symbol } } },
-        { new: true }
-      );
-      // portfolio.stocks.splice(stockIndex, 1);
+      // updatedPortfolio = await StockPortfolio.findOneAndUpdate(
+      //   {
+      //     _id: portfolioId,
+      //     "stocks.symbol": stockTransiction.symbol,
+      //   },
+      //   { $pull: { stocks: { symbol: stockTransiction.symbol } } },
+      //   { new: true }
+      // );
+      portfolio.stocks.splice(stockIndex, 1);
     } else {
       // update
-      updatedPortfolio = await StockPortfolio.findOneAndUpdate(
-        { _id: portfolioId, "stocks.symbol": stockTransiction.symbol },
-        {
-          $set: {
-            "stocks.$.quantity":
-              currentStocksAmount - stockTransiction.quantity,
-          },
-        },
-        { new: true }
-      );
-      // portfolio.stocks[stockIndex].quantity -= stockTransiction.quantity;
+      // updatedPortfolio = await StockPortfolio.findOneAndUpdate(
+      //   { _id: portfolioId, "stocks.symbol": stockTransiction.symbol },
+      //   {
+      //     $set: {
+      //       "stocks.$.quantity":
+      //         currentStocksAmount - stockTransiction.quantity,
+      //     },
+      //   },
+      //   { new: true }
+      // );
+      portfolio.stocks[stockIndex].quantity -= stockTransiction.quantity;
     }
 
     await recordTransiction(userId!, {
@@ -174,12 +186,11 @@ export async function removeStockFromPortfolio( // document in the history
       quantity: stockTransiction.quantity,
       type: "Sell",
     });
-    // const updatedPortfolio = await portfolio.save();
+    const updatedPortfolio = await portfolio.save();
 
     res.status(200).json(updatedPortfolio);
   } catch (error) {
-    const errorName = getErrorName(error);
-    const errorMessage = getErrorMessage(error);
+    const { errorMessage, errorName } = getErrorData(error);
     console.log("removeStockFromPortfolio error:", errorName, errorMessage);
     if (errorName === "ValidationError") {
       return res.status(400).json({ message: errorMessage });

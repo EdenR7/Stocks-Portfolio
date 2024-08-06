@@ -1,16 +1,8 @@
 import mongoose, { Schema } from "mongoose";
-
-export interface PortfolioStockI {
-  symbol: string;
-  quantity: number;
-}
-
-export interface StockPortfolioI {
-  _id?: string;
-  stocks: PortfolioStockI[];
-  name: string;
-  userId: Schema.Types.ObjectId;
-}
+import {
+  PortfolioStockI,
+  StockPortfolioI,
+} from "../types/stock_portfolios.types";
 
 const stockSchema = new mongoose.Schema<PortfolioStockI>(
   {

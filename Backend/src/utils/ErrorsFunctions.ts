@@ -29,3 +29,9 @@ export function getErrorName(error: unknown) {
   }
   // return name;
 }
+
+export function getErrorData(error: unknown) {
+  const errorName = getErrorName(error);
+  const errorMessage = getErrorMessage(error);
+  return { errorName, errorMessage };
+}

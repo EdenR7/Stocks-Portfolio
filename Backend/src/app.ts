@@ -27,7 +27,7 @@ export async function main() {
 }
 export default app;
 
-// portfolio value and hostory value
+// portfolio history value
 // portfolio validations
 // add user favourites crud
 // clean, orgnize and make the code readable and more precise
