@@ -29,8 +29,10 @@ export async function register(req: Request, res: Response) {
     const { errorMessage, errorName } = getErrorData(error);
     console.log("register", errorName, errorMessage);
     if ((error as any).code === 11000) {
-      console.log("username already exists");
-      return res.status(400).json({ message: "User already exists" });
+      const duplicateField = Object.keys((error as any).keyPattern)[0];
+      const message = `The ${duplicateField} is already taken.`;
+      console.log(message);
+      return res.status(400).json({ message });
     }
     res.status(500).json({ message: "Registration failed" });
   }

@@ -14,9 +14,9 @@ export function MainNav() {
         <div className="flex gap-4">
           <Link
             to="/"
-            className="uppercase mr-4 flex items-center space-x-2 lg:mr-6 text-lg"
+            className="uppercase mr-4 flex gap-1 items-center space-x-2 lg:mr-6 text-md "
           >
-            Logo
+            Stock Companion 
           </Link>
           <nav className="hidden sm:flex items-center gap-4 text-sm lg:gap-6">
             <Link className=" hover:underline decoration-primary" to="/about">

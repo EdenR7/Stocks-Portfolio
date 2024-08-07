@@ -6,3 +6,16 @@ export const intervalOptions: HistoricalOptionsIntervalType[] = [
   "1mo",
   undefined,
 ];
+
+export const trendingStocks = [
+  "QQQ",
+  "NDX",
+  "COMP",
+  "TSLA",
+  "AMZN",
+  "AMD",
+  "AAPL",
+  "MSFT",
+  "INTC",
+  "GOOGL",
+];

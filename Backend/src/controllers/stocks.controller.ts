@@ -9,6 +9,28 @@ import {
   getStockData,
   getStocksHistoryQueryOptions,
 } from "../utils/stocksFuncs";
+import { trendingStocks } from "../constants";
+
+export async function getTrendingStocks(req: Request, res: Response) {
+  try {
+    
+    const trendingStocksData = await yahooFinance.quote(trendingStocks);
+    const trendingStocksResponse = trendingStocksData.map((stock) => ({
+      stock: stock.symbol,
+      change: stock.regularMarketChangePercent,
+      value: stock.regularMarketPrice,
+    }));
+    console.log(trendingStocksResponse);
+    
+    res.status(200).json(trendingStocksResponse);
+  } catch (error) {
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("getCurrentStockPrice, Error: " + errorName, errorMessage);
+    if (errorName === "NotFoundError")
+      return res.status(404).json({ message: errorMessage });
+    res.status(500).json("Internal Server Error");
+  }
+}
 
 export async function getCurrentStockPrice(req: Request, res: Response) {
   const { symbol } = req.params;
@@ -19,12 +41,6 @@ export async function getCurrentStockPrice(req: Request, res: Response) {
       return res.status(404).json({ message: "Symbol not found" });
     }
     res.status(200).json(stock);
-    // res.status(200).json({
-    //   value: stock.regularMarketPrice,
-    //   name: stock.shortName,
-    //   type: stock.quoteType,
-    //   symbol: stock.symbol,
-    // });
   } catch (error) {
     const { errorMessage, errorName } = getErrorData(error);
     console.log("getCurrentStockPrice, Error: " + errorName, errorMessage);

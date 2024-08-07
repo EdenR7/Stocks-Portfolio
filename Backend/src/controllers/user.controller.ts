@@ -6,7 +6,7 @@ import { getStockData } from "../utils/stocksFuncs";
 
 export async function getUser(req: AuthRequest, res: Response) {
   const { userId } = req;
-
+  
   try {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ message: "User not found" });

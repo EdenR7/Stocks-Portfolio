@@ -42,8 +42,12 @@ export function UserButton() {
           <Link to="#">Setting</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout} className="flex items-center gap-1">
-          <LogOut className="h-4 w-4" /> Logout
+        <DropdownMenuItem
+          onClick={logout}
+          className="flex items-center gap-1 text-red-500 cursor-pointer hover:text-red-900"
+        >
+          <span className=" font-semibold">Logout</span>{" "}
+          <LogOut className="h-4 w-4" />
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

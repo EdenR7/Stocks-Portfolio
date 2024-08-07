@@ -112,3 +112,8 @@ function App() {
 }
 
 export default App;
+
+// insert utils functions especially for the errors
+// control the ui
+// display correct error message
+// define the structure

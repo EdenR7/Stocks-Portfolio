@@ -31,6 +31,7 @@ import {
 import { useAuth } from "@/providers/auth-provider";
 import { PASSWORD_MESSAGE, REGEX_PASSWORD } from "@/constants/auth.constant";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { getErrorData } from "@/utils/errors/ErrorsFunctions";
 
 // Infer the type of the form values from the schema. we are using it also on AuthProvider.
 export type RegisterFormValues = z.infer<typeof formSchema>;
@@ -38,6 +39,8 @@ export type RegisterFormValues = z.infer<typeof formSchema>;
 // Define your form schema.
 const formSchema = z
   .object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
     username: z.string().min(1).max(50),
     email: z.string().email(),
     password: z.string().min(8).regex(REGEX_PASSWORD, {
@@ -65,6 +68,8 @@ function RegisterPage() {
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      firstName: "",
+      lastName: "",
       username: "",
       email: "",
       password: "",
@@ -85,17 +90,23 @@ function RegisterPage() {
         variant: "primary",
       });
       navigate("/auth/login");
-    } catch (error: any) {
-      if (error?.response?.data?.error) {
-        // Check if the error is related to email already existing
-        if (error.response.data.error === "Email already exists") {
+    } catch (error) {
+      const { errorMessage, errorStatus } = getErrorData(error);
+      console.log(errorMessage, errorStatus);
+      if (errorStatus === 400) {
+        if (errorMessage === "The username is already taken.") {
+          form.setError("username", {
+            type: "manual",
+            message: "Sorry, Username already exists",
+          });
+        } else if (errorMessage === "The email is already taken.") {
           form.setError("email", {
             type: "manual",
-            message: error.response.data.error,
+            message: "Sorry, Username already exists",
           });
         } else {
           toast({
-            title: error.response.data.error,
+            title: "An error occurred",
             description: "Please try again later.",
             variant: "destructive",
           });
@@ -114,12 +125,46 @@ function RegisterPage() {
 
   return (
     <>
-      <Card className=" py-6 min-h-96 min-w-80 flex flex-col items-center justify-center gap-4 rounded-xl">
+      <Card className=" pt-8 px-6 min-h-96 min-w-72 flex flex-col items-center justify-center gap-4 rounded-xl">
         <CardTitle className="text-3xl">Register</CardTitle>
         <CardContent className="w-full max-w-80 ">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <fieldset disabled={isPending} className="flex flex-col gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
+                      <FormControl>
+                        <IconInput
+                          Icon={User}
+                          placeholder="First Name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <IconInput
+                          Icon={User}
+                          placeholder="Last Name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="username"
@@ -183,7 +228,7 @@ function RegisterPage() {
                         </div>
                       </FormControl>
                       <FormDescription>
-                        Must be at least 3 characters minimum.
+                        Must be at least 8 characters minimum.
                       </FormDescription>
                       <FormMessage />
                     </FormItem>

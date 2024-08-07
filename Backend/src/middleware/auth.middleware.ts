@@ -7,6 +7,7 @@ const { JWT_SECRET } = process.env;
 
 export function verifyToken(req: Request, res: Response, next: NextFunction) {
   try {
+    
     const authHeader =
       req.header("Authorization") || req.header("authorization");
     const token = authHeader?.replace("Bearer ", "");

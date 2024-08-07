@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { IconInput } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, EyeOff, LoaderCircle, LockKeyhole, Mail } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle, LockKeyhole, User } from "lucide-react";
 
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
@@ -21,18 +21,15 @@ import {
 } from "@/components/ui/form";
 
 import { useAuth } from "@/providers/auth-provider";
-import { PASSWORD_MESSAGE, REGEX_PASSWORD } from "@/constants/auth.constant";
 import { Card, CardContent, CardFooter, CardTitle } from "@/components/ui/card";
+import { getErrorData } from "@/utils/errors/ErrorsFunctions";
 
 // Infer the type of the form values from the schema. we are using it also on AuthProvider.
 export type LoginFormValues = z.infer<typeof formSchema>;
 
-// Define your form schema.
 const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8).regex(REGEX_PASSWORD, {
-    message: PASSWORD_MESSAGE,
-  }),
+  username: z.string(),
+  password: z.string(),
 });
 
 function LoginPage() {
@@ -40,17 +37,14 @@ function LoginPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // State for password visibility
   const [showPassword, setShowPassword] = useState(false);
 
-  // State for pending UI
   const [isPending, setIsPending] = useState(false);
 
-  // Define your form.
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      username: "",
       password: "",
     },
   });
@@ -61,11 +55,12 @@ function LoginPage() {
       setIsPending(true);
       await login(values);
       navigate("/");
-    } catch (error: any) {
-      if (error.response?.status === 401) {
+    } catch (error) {
+      const { errorStatus } = getErrorData(error);
+      if (errorStatus === 401) {
         form.setError("root", {
           type: "manual",
-          message: "Invalid email or password.",
+          message: "Invalid username or password.",
         });
       } else {
         toast({
@@ -81,7 +76,7 @@ function LoginPage() {
 
   return (
     <>
-      <Card className=" py-6 min-h-96 min-w-80 flex flex-col items-center justify-center gap-4 rounded-xl">
+      <Card className=" pt-8 px-6 min-h-96 min-w-72 flex flex-col items-center justify-center gap-4 rounded-xl">
         <CardTitle className="text-3xl">Login</CardTitle>
         <CardContent className="w-full max-w-80 ">
           <Form {...form}>
@@ -89,15 +84,15 @@ function LoginPage() {
               <fieldset disabled={isPending} className="flex flex-col gap-4">
                 <FormField
                   control={form.control}
-                  name="email"
+                  name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email</FormLabel>
+                      <FormLabel>Username</FormLabel>
                       <FormControl>
                         <IconInput
-                          Icon={Mail}
-                          type="email"
-                          placeholder="Email"
+                          Icon={User}
+                          type="text"
+                          placeholder="Username"
                           {...field}
                         />
                       </FormControl>
@@ -137,9 +132,8 @@ function LoginPage() {
                   )}
                 />
 
-                {/* Display the error message */}
                 {form.formState.errors.root && (
-                  <div className="text-red-600">
+                  <div className="text-red-600 text-sm font-semibold">
                     {form.formState.errors.root.message}
                   </div>
                 )}
