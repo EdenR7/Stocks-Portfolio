@@ -29,5 +29,4 @@ export default app;
 
 
 // portfolio validations
-// add user favourites crud
 // clean, orgnize and make the code readable and more precise

@@ -16,8 +16,8 @@ import { HistoricalHistoryResult } from "yahoo-finance2/dist/esm/src/modules/his
 
 export async function createPortfolio(req: AuthRequest, res: Response) {
   const { userId } = req;
-
   const { portfolioName } = req.body;
+  if (!portfolioName) return res.status(400).json("Portfolio name is required");
 
   try {
     const p = { userId, name: portfolioName };
@@ -34,7 +34,6 @@ export async function createPortfolio(req: AuthRequest, res: Response) {
 
 export async function getUserPortfolios(req: AuthRequest, res: Response) {
   const { userId } = req;
-  console.log(userId);
 
   try {
     const portfolios = await StockPortfolio.find({ userId: userId });
@@ -94,11 +93,12 @@ export async function getHistoricalPortfolioData(
       return res.status(404).json({ message: "Portfolio not found" });
     if (portfolio.userId.toString() !== userId)
       return res.status(403).json({ message: "Forbidden" });
-    const historicalQuery = getStocksHistoryQueryOptions(req);
 
+    const historicalQuery = getStocksHistoryQueryOptions(req); // build the query options
     const historyDataPromises = portfolio.stocks.map(async (stock) => {
       const stockHistoricalData: HistoricalHistoryResult =
         await getHistoricStockData(stock.symbol, historicalQuery);
+      //Extract the value from the entire historical data
       const stockHistoricalValues = stockHistoricalData.map((item) => ({
         date: item.date,
         value: (item.close * stock.quantity).toFixed(2),
