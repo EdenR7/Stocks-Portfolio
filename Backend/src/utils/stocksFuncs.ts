@@ -3,13 +3,14 @@ import { CustomError } from "./errors/CustomError";
 import { getErrorData } from "../utils/errors/ErrorsFunctions";
 import { Request } from "express";
 import { intervalOptions } from "../constants";
-import { HistoricalOptions } from "yahoo-finance2/dist/esm/src/modules/historical";
 import {
-  HistoricalOptionsIntervalType,
-  QueryIntervalOptionsType,
-} from "../types/stocks.types";
+  HistoricalHistoryResult,
+  HistoricalOptions,
+} from "yahoo-finance2/dist/esm/src/modules/historical";
+import { HistoricalOptionsIntervalType } from "../types/stocks.types";
+import { Quote } from "yahoo-finance2/dist/esm/src/modules/quote";
 
-export async function getStockData(symbol: string) {
+export async function getStockData(symbol: string): Promise<Quote> {
   try {
     const stock = await yahooFinance.quote(symbol);
     if (!stock) {
@@ -28,7 +29,7 @@ export async function getStockData(symbol: string) {
 export async function getHistoricStockData(
   symbol: string,
   queryOptions: HistoricalOptions
-) {
+): Promise<HistoricalHistoryResult> {
   try {
     const stockHistory = await yahooFinance.historical(symbol, queryOptions);
     return stockHistory;
@@ -38,8 +39,6 @@ export async function getHistoricStockData(
     throw new CustomError(errorName, errorMessage);
   }
 }
-
-
 
 export function getStocksHistoryQueryOptions(req: Request): HistoricalOptions {
   const { from, to, interval } = req.query;
@@ -76,7 +75,7 @@ export function getStocksHistoryQueryOptions(req: Request): HistoricalOptions {
   }
 }
 
-export function parseDateFromString(stringFormat: string | undefined) {
+export function parseDateFromString(stringFormat: string | undefined): Date {
   if (typeof stringFormat !== "string") throw new Error("Invalid date format");
   const date = new Date(stringFormat);
   date.setDate(date.getDate() + 1);

@@ -5,7 +5,7 @@ import { CustomError } from "./errors/CustomError";
 export async function recordTransiction(
   userId: string,
   transiction: TransictionI
-) {
+): Promise<void> {
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,

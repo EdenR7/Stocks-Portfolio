@@ -12,6 +12,7 @@ import {
   StockPortfolioI,
 } from "../types/stock_portfolios.types";
 import { getErrorData } from "../utils/errors/ErrorsFunctions";
+import { HistoricalHistoryResult } from "yahoo-finance2/dist/esm/src/modules/historical";
 
 export async function createPortfolio(req: AuthRequest, res: Response) {
   const { userId } = req;
@@ -96,12 +97,9 @@ export async function getHistoricalPortfolioData(
     const historicalQuery = getStocksHistoryQueryOptions(req);
 
     const historyDataPromises = portfolio.stocks.map(async (stock) => {
-      // Add the types of stockHistoricalData and item in the map
-      const stockHistoricalData = await getHistoricStockData(
-        stock.symbol,
-        historicalQuery
-      );
-      const stockHistoricalValues = stockHistoricalData.map((item: any) => ({
+      const stockHistoricalData: HistoricalHistoryResult =
+        await getHistoricStockData(stock.symbol, historicalQuery);
+      const stockHistoricalValues = stockHistoricalData.map((item) => ({
         date: item.date,
         value: (item.close * stock.quantity).toFixed(2),
       }));
@@ -126,9 +124,7 @@ export async function getHistoricalPortfolioData(
       return res.status(400).json({ message: errorMessage });
 
     if (errorName === "HTTPError")
-      return res
-        .status(404)
-        .json({ message: `One of the stocks ${errorMessage}` });
+      return res.status(404).json({ message: errorMessage });
     res.status(500).json("Internal Server Error");
   }
 }

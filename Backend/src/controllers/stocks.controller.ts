@@ -5,6 +5,7 @@ import { getErrorData } from "../utils/errors/ErrorsFunctions";
 
 import { CustomError } from "../utils/errors/CustomError";
 import {
+  getHistoricStockData,
   getStockData,
   getStocksHistoryQueryOptions,
 } from "../utils/stocksFuncs";
@@ -17,12 +18,13 @@ export async function getCurrentStockPrice(req: Request, res: Response) {
     if (!stock) {
       return res.status(404).json({ message: "Symbol not found" });
     }
-    res.status(200).json({
-      value: stock.regularMarketPrice,
-      name: stock.shortName,
-      type: stock.quoteType,
-      symbol: stock.symbol,
-    });
+    res.status(200).json(stock);
+    // res.status(200).json({
+    //   value: stock.regularMarketPrice,
+    //   name: stock.shortName,
+    //   type: stock.quoteType,
+    //   symbol: stock.symbol,
+    // });
   } catch (error) {
     const { errorMessage, errorName } = getErrorData(error);
     console.log("getCurrentStockPrice, Error: " + errorName, errorMessage);
@@ -70,7 +72,7 @@ export async function getStockHistoricalPrices(req: Request, res: Response) {
 
   try {
     const queryOptions = getStocksHistoryQueryOptions(req);
-    const stockHistory = await yahooFinance.historical(
+    const stockHistory = await getHistoricStockData(
       symbol,
       queryOptions as HistoricalOptions
     );

@@ -1,5 +1,5 @@
-import mongoose, { connect } from "mongoose";
-import dotenv, { config } from "dotenv";
+import { connect } from "mongoose";
+import { config } from "dotenv";
 import { getErrorMessage } from "../utils/errors/ErrorsFunctions";
 
 config();
