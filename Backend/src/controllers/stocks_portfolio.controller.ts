@@ -2,12 +2,16 @@ import { Response } from "express";
 import { AuthRequest } from "../types/auth.types";
 import StockPortfolio from "../models/stockPortfolio.model";
 import { recordTransiction } from "../utils/userFuncs";
-import { getErrorData } from "../utils/ErrorsFunctions";
-import { getStockData } from "../utils/stocksFuncs";
+import {
+  getHistoricStockData,
+  getStockData,
+  getStocksHistoryQueryOptions,
+} from "../utils/stocksFuncs";
 import {
   NewStockTransictionI,
   StockPortfolioI,
 } from "../types/stock_portfolios.types";
+import { getErrorData } from "../utils/errors/ErrorsFunctions";
 
 export async function createPortfolio(req: AuthRequest, res: Response) {
   const { userId } = req;
@@ -75,6 +79,60 @@ export async function getCurrentPortfolioValue(
   }
 }
 
+export async function getHistoricalPortfolioData(
+  req: AuthRequest,
+  res: Response
+) {
+  const { userId } = req;
+  const { portfolioId } = req.params;
+  try {
+    const portfolio: StockPortfolioI | null = await StockPortfolio.findById(
+      portfolioId
+    );
+    if (!portfolio)
+      return res.status(404).json({ message: "Portfolio not found" });
+    if (portfolio.userId.toString() !== userId)
+      return res.status(403).json({ message: "Forbidden" });
+    const historicalQuery = getStocksHistoryQueryOptions(req);
+
+    const historyDataPromises = portfolio.stocks.map(async (stock) => {
+      // Add the types of stockHistoricalData and item in the map
+      const stockHistoricalData = await getHistoricStockData(
+        stock.symbol,
+        historicalQuery
+      );
+      const stockHistoricalValues = stockHistoricalData.map((item: any) => ({
+        date: item.date,
+        value: (item.close * stock.quantity).toFixed(2),
+      }));
+      return {
+        symbol: stock.symbol,
+        quantity: stock.quantity,
+        historicalData: stockHistoricalValues,
+      };
+    });
+    const stocksHistoricalData = await Promise.all(historyDataPromises);
+
+    res.status(200).json(stocksHistoricalData);
+  } catch (error) {
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log(
+      "getHistoricalPortfolioData, Error: " + errorName,
+      errorMessage
+    );
+    if (errorName === "CastError")
+      res.status(404).json({ message: "Portfolio not found" });
+    if (errorName === "CustomError-BadRequest")
+      return res.status(400).json({ message: errorMessage });
+
+    if (errorName === "HTTPError")
+      return res
+        .status(404)
+        .json({ message: `One of the stocks ${errorMessage}` });
+    res.status(500).json("Internal Server Error");
+  }
+}
+
 export async function addStockToPortfolio(req: AuthRequest, res: Response) {
   const { userId } = req;
   const { portfolioId } = req.params;
@@ -138,22 +196,18 @@ export async function removeStockFromPortfolio( // document in the history
       _id: portfolioId,
       userId,
     });
-
     if (!portfolio)
       return res.status(404).json({ message: "Portfolio not found" });
 
     const stockIndex = portfolio.stocks.findIndex(
       (stock) => stock.symbol === stockTransiction.symbol
     );
-
     if (stockIndex === -1)
       return res.status(404).json({ message: "Stock not exist" });
-
     // validate the quantity
     const currentStocksAmount = portfolio.stocks[stockIndex].quantity;
     if (currentStocksAmount < stockTransiction.quantity)
       return res.status(400).json({ message: "Not enough stock" });
-
     // let updatedPortfolio;
     if (currentStocksAmount - stockTransiction.quantity === 0) {
       // remove

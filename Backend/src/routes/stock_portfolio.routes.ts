@@ -3,6 +3,7 @@ import {
   addStockToPortfolio,
   createPortfolio,
   getCurrentPortfolioValue,
+  getHistoricalPortfolioData,
   getUserPortfolios,
   removeStockFromPortfolio,
 } from "../controllers/stocks_portfolio.controller";
@@ -17,9 +18,9 @@ stockPortfolioRouter.get("/", getUserPortfolios);
 stockPortfolioRouter.post("/:portfolioId", addStockToPortfolio);
 // Remove a stock from the portfolio
 stockPortfolioRouter.delete("/:portfolioId", removeStockFromPortfolio);
+// Get history stats by params
+stockPortfolioRouter.get("/:portfolioId/history", getHistoricalPortfolioData);
 // Get current portfolio value
 stockPortfolioRouter.get("/:portfolioId", getCurrentPortfolioValue);
-
-// Get history stats by params
 
 export default stockPortfolioRouter;

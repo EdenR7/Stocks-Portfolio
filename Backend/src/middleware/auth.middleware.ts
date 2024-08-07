@@ -2,7 +2,7 @@ import type { NextFunction, Request, Response } from "express";
 import type { Secret } from "jsonwebtoken";
 import jwt from "jsonwebtoken";
 import { AuthRequest, UserJwtPaylod } from "../types/auth.types";
-import { getErrorMessage } from "../utils/ErrorsFunctions";
+import { getErrorMessage } from "../utils/errors/ErrorsFunctions";
 const { JWT_SECRET } = process.env;
 
 export function verifyToken(req: Request, res: Response, next: NextFunction) {

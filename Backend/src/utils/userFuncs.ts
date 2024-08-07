@@ -1,6 +1,6 @@
 import User from "../models/user.model";
 import { TransictionI } from "../types/user.types";
-import { CustomError } from "./CustomError";
+import { CustomError } from "./errors/CustomError";
 
 export async function recordTransiction(
   userId: string,

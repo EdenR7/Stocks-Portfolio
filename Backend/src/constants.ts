@@ -1,4 +1,6 @@
-export const intervalOptions = [
+import { QueryIntervalOptionsType } from "./types/stocks.types";
+
+export const intervalOptions: QueryIntervalOptionsType[] = [
   "1m",
   "2m",
   "5m",
@@ -14,6 +16,7 @@ export const intervalOptions = [
   "3mo",
   undefined,
 ];
+
 
 export const stocksTry = [
   "AAPL",

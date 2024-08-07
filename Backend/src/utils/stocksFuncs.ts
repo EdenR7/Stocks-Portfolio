@@ -1,9 +1,13 @@
 import yahooFinance from "yahoo-finance2";
-import { CustomError } from "./CustomError";
-import { getErrorData, getErrorMessage, getErrorName } from "./ErrorsFunctions";
+import { CustomError } from "./errors/CustomError";
+import { getErrorData } from "../utils/errors/ErrorsFunctions";
 import { Request } from "express";
 import { intervalOptions } from "../constants";
 import { HistoricalOptions } from "yahoo-finance2/dist/esm/src/modules/historical";
+import {
+  HistoricalOptionsIntervalType,
+  QueryIntervalOptionsType,
+} from "../types/stocks.types";
 
 export async function getStockData(symbol: string) {
   try {
@@ -35,7 +39,9 @@ export async function getHistoricStockData(
   }
 }
 
-export function getStocksHistoryQueryOptions(req: Request) {
+
+
+export function getStocksHistoryQueryOptions(req: Request): HistoricalOptions {
   const { from, to, interval } = req.query;
   if (!from || typeof from !== "string")
     throw new CustomError(
@@ -43,14 +49,16 @@ export function getStocksHistoryQueryOptions(req: Request) {
       "Missing required query parameter: from"
     );
   try {
-    let period1Q: string | Date, period2Q: string | Date | undefined, intervalQ;
+    let period1Q: string | Date,
+      period2Q: string | Date | undefined,
+      intervalQ: HistoricalOptionsIntervalType;
     period1Q = parseDateFromString(from);
     if (to && typeof to === "string") {
       period2Q = parseDateFromString(to) as Date;
     }
     if (interval) {
-      if (intervalOptions.includes(interval as string)) {
-        intervalQ = interval;
+      if (intervalOptions.includes(interval as HistoricalOptionsIntervalType)) {
+        intervalQ = interval as HistoricalOptionsIntervalType;
       } else {
         throw new CustomError(
           "CustomError-BadRequest",

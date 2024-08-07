@@ -1,6 +1,6 @@
 import mongoose, { connect } from "mongoose";
 import dotenv, { config } from "dotenv";
-import { getErrorMessage } from "../utils/ErrorsFunctions";
+import { getErrorMessage } from "../utils/errors/ErrorsFunctions";
 
 config();
 async function connectDB() {

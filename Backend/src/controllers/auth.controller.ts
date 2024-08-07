@@ -3,8 +3,9 @@ import User from "../models/user.model";
 import bcrypt from "bcrypt";
 import jwt, { type Secret } from "jsonwebtoken";
 import { config } from "dotenv";
+import { getErrorData } from "../utils/errors/ErrorsFunctions";
 
-config() // Check that
+config(); // Check that
 
 const { JWT_SECRET } = process.env;
 
@@ -25,7 +26,8 @@ export async function register(req: Request, res: Response) {
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    console.log("register", error);
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("register", errorName, errorMessage);
     if ((error as any).code === 11000) {
       console.log("username already exists");
       return res.status(400).json({ message: "User already exists" });
@@ -54,7 +56,8 @@ export async function login(req: Request, res: Response) {
 
     res.status(200).json(token);
   } catch (error) {
-    console.log("login", error);
+    const { errorMessage, errorName } = getErrorData(error);
+    console.log("login", errorName, errorMessage);
     res.status(500).json({ message: "Login failed" });
   }
 }

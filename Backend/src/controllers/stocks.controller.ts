@@ -1,13 +1,9 @@
 import e, { Request, Response } from "express";
 import yahooFinance from "yahoo-finance2";
-import { intervalOptions } from "../constants";
 import { HistoricalOptions } from "yahoo-finance2/dist/esm/src/modules/historical";
-import {
-  getErrorData,
-  getErrorMessage,
-  getErrorName,
-} from "../utils/ErrorsFunctions";
-import { CustomError } from "../utils/CustomError";
+import { getErrorData } from "../utils/errors/ErrorsFunctions";
+
+import { CustomError } from "../utils/errors/CustomError";
 import {
   getStockData,
   getStocksHistoryQueryOptions,
@@ -80,7 +76,7 @@ export async function getStockHistoricalPrices(req: Request, res: Response) {
     );
 
     res.status(200).json(stockHistory);
-  } catch (error: any) {
+  } catch (error) {
     const { errorMessage, errorName } = getErrorData(error);
     console.log("getStockHistoricalPrices, Error: " + errorName, errorMessage);
     if (errorName === "CustomError-BadRequest") {

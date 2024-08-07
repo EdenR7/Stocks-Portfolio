@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import User from "../models/user.model";
 import { AuthRequest } from "../types/auth.types";
+import { getErrorData } from "../utils/errors/ErrorsFunctions";
 
 export const getUser = async (req: AuthRequest, res: Response) => {
   const { userId } = req;
@@ -11,7 +12,7 @@ export const getUser = async (req: AuthRequest, res: Response) => {
     const { password, ...userWithoutPwd } = user.toObject();
     res.json(userWithoutPwd);
   } catch (error) {
-    const err = error as Error;
-    res.status(500).json({ error: err.message });
+    const { errorName, errorMessage } = getErrorData(error);
+    res.status(500).json({ message: errorMessage });
   }
 };
